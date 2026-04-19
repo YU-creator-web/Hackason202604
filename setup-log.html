@@ -3,177 +3,336 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hackathon2026 - 環境構築ログ (2026-04-19)</title>
+  <title>Microsoft Agent Hackathon 2026 — 環境構築ガイド</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; line-height: 1.7; }
-    header { background: linear-gradient(135deg, #0078d4, #5c2d91); padding: 40px; text-align: center; }
-    header h1 { font-size: 2rem; color: white; margin-bottom: 8px; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; line-height: 1.8; }
+
+    header { background: linear-gradient(135deg, #0078d4, #5c2d91); padding: 48px 24px; text-align: center; }
+    header h1 { font-size: 2rem; color: white; margin-bottom: 10px; }
     header p { color: #cce4ff; font-size: 1rem; }
-    .container { max-width: 900px; margin: 40px auto; padding: 0 24px; }
-    .section { background: #1a1d27; border-radius: 12px; padding: 28px; margin-bottom: 28px; border-left: 4px solid #0078d4; }
-    .section h2 { font-size: 1.2rem; color: #4fc3f7; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
-    .section h2 .num { background: #0078d4; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
-    .step { background: #12141e; border-radius: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid #2a2d3e; }
-    .step h3 { color: #a5d6a7; font-size: 0.95rem; margin-bottom: 8px; }
-    .step p { font-size: 0.9rem; color: #b0bec5; }
-    .step code { background: #0d0f18; color: #80cbc4; padding: 2px 8px; border-radius: 4px; font-family: 'Cascadia Code', monospace; font-size: 0.85rem; }
-    .step pre { background: #0d0f18; color: #80cbc4; padding: 12px; border-radius: 6px; font-family: 'Cascadia Code', monospace; font-size: 0.85rem; margin-top: 8px; overflow-x: auto; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; margin-left: 8px; }
-    .badge.done { background: #1b5e20; color: #a5d6a7; }
-    .badge.info { background: #0d47a1; color: #90caf9; }
-    .badge.warn { background: #4a2800; color: #ffcc80; }
-    .summary { background: #1a2744; border: 1px solid #0078d4; border-radius: 12px; padding: 24px; margin-bottom: 28px; }
-    .summary h2 { color: #4fc3f7; margin-bottom: 16px; }
-    .summary table { width: 100%; border-collapse: collapse; }
-    .summary td { padding: 10px 12px; border-bottom: 1px solid #2a3550; font-size: 0.9rem; }
-    .summary td:first-child { color: #90caf9; width: 40%; }
-    footer { text-align: center; padding: 32px; color: #546e7a; font-size: 0.85rem; }
+
+    .container { max-width: 860px; margin: 48px auto; padding: 0 24px; }
+
+    .toc { background: #1a2744; border: 1px solid #0078d4; border-radius: 12px; padding: 24px; margin-bottom: 40px; }
+    .toc h2 { color: #4fc3f7; font-size: 1rem; margin-bottom: 14px; }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin-bottom: 6px; font-size: 0.9rem; }
+    .toc a { color: #90caf9; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    .section { background: #1a1d27; border-radius: 12px; padding: 32px; margin-bottom: 32px; border-left: 4px solid #0078d4; }
+    .section h2 { font-size: 1.2rem; color: #4fc3f7; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+    .section h2 .num { background: #0078d4; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; font-weight: bold; }
+
+    .step { background: #12141e; border-radius: 8px; padding: 18px; margin-bottom: 14px; border: 1px solid #2a2d3e; }
+    .step h3 { color: #a5d6a7; font-size: 0.95rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .step p { font-size: 0.9rem; color: #b0bec5; margin-bottom: 8px; }
+    .step p:last-child { margin-bottom: 0; }
+    .step ul, .step ol { font-size: 0.9rem; color: #b0bec5; padding-left: 20px; }
+    .step li { margin-bottom: 6px; }
+
+    code { background: #0d0f18; color: #80cbc4; padding: 2px 8px; border-radius: 4px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.85rem; }
+    pre { background: #0d0f18; color: #80cbc4; padding: 14px 16px; border-radius: 8px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.85rem; margin-top: 10px; overflow-x: auto; border: 1px solid #1e2130; line-height: 1.6; }
+
+    .note { background: #0d2137; border-left: 3px solid #4fc3f7; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 10px; font-size: 0.88rem; color: #90caf9; }
+    .warn { background: #1a1100; border-left: 3px solid #ffb74d; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 10px; font-size: 0.88rem; color: #ffcc80; }
+
+    .check { color: #66bb6a; margin-right: 4px; }
+    .arrow { color: #4fc3f7; }
+
+    footer { text-align: center; padding: 40px; color: #546e7a; font-size: 0.85rem; border-top: 1px solid #1a1d27; margin-top: 24px; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>🚀 Hackathon2026 環境構築ログ</h1>
-  <p>Microsoft Agent Hackathon 2026 参加準備 — 2026年4月19日</p>
+  <h1>🚀 Microsoft Agent Hackathon 2026</h1>
+  <p>環境構築ガイド — Teams AIエージェント開発スタートアップ</p>
 </header>
 
 <div class="container">
 
-  <div class="summary">
-    <h2>📋 今日の成果まとめ</h2>
-    <table>
-      <tr><td>目標</td><td>Microsoft Agent Hackathon 2026 参加のための開発環境構築</td></tr>
-      <tr><td>Teamsテナント</td><td>個人事業テナント（onmicrosoft.com）✅</td></tr>
-      <tr><td>Azureサブスクリプション</td><td>Azure subscription 1（従量課金）✅</td></tr>
-      <tr><td>Azure Foundryリソース</td><td>Hackathon202604（Japan East）✅</td></tr>
-      <tr><td>デプロイ済みモデル</td><td>gpt-4o（Standard）✅</td></tr>
-      <tr><td>開発環境</td><td>VS Code + Microsoft 365 Agents Toolkit + Python 3.13 ✅</td></tr>
-      <tr><td>プロジェクト</td><td>一般的なTeamsエージェント（Python）✅</td></tr>
-    </table>
+  <div class="toc">
+    <h2>📑 目次</h2>
+    <ol>
+      <li><a href="#s1">Microsoft 365 Businessアカウントの作成</a></li>
+      <li><a href="#s2">Teamsの動作確認</a></li>
+      <li><a href="#s3">Azureサブスクリプションの登録</a></li>
+      <li><a href="#s4">Azure AI Foundryリソースの作成</a></li>
+      <li><a href="#s5">GPT-4oモデルのデプロイ</a></li>
+      <li><a href="#s6">APIキーとエンドポイントの取得</a></li>
+      <li><a href="#s7">VS Code開発環境のセットアップ</a></li>
+      <li><a href="#s8">Teamsエージェントプロジェクトの生成</a></li>
+      <li><a href="#s9">環境変数の設定と依存ライブラリのインストール</a></li>
+    </ol>
   </div>
 
-  <div class="section">
-    <h2><span class="num">1</span>ハッカソン調査・アイデア検討</h2>
-    <div class="step">
-      <h3>ハッカソン概要</h3>
-      <p>Microsoft Agent Hackathon powered by Tokyo Electron Device に参加検討。</p>
-      <p>必須要件：<code>Azure実行基盤</code>（App Service / Container Apps等）＋ <code>Microsoft AI技術</code>（Azure OpenAI等）1つ以上の使用。</p>
-    </div>
-    <div class="step">
-      <h3>作成するものの方向性</h3>
-      <p>① 会社のTeamsボット（会議内容を学習するチャットボット）の理解を深める</p>
-      <p>② オリジナル：<strong>音声で近くの雰囲気ある酒場を案内するエージェント</strong>（「創業○年の渋い酒場を探して」などの会話で動作）</p>
-    </div>
-  </div>
+  <!-- STEP 1 -->
+  <div class="section" id="s1">
+    <h2><span class="num">1</span>Microsoft 365 Businessアカウントの作成</h2>
 
-  <div class="section">
-    <h2><span class="num">2</span>Microsoft 365テナントの準備</h2>
     <div class="step">
-      <h3>問題：Microsoft 365 Developer Program に登録できない</h3>
-      <p>エラーコード <code>41101</code>：既存テナント（pm111）が期限切れのため登録不可。個人アカウントでも対象外。</p>
+      <h3>🎯 この手順の目的</h3>
+      <p>TeamsのボットをテストするためのMicrosoft 365テナント（組織環境）を用意します。個人のTeamsアカウントではボット開発に必要な機能が制限されるため、Business/Enterpriseプランが必要です。</p>
     </div>
-    <div class="step">
-      <h3>解決：新規テナントで無料試用版を取得 ✅</h3>
-      <p>新しいMicrosoftアカウント（onmicrosoft.com）を作成。</p>
-      <p><strong>Microsoft 365 Business Standard 無料試用版</strong>（90日間）を取得 → Teamsが使える状態に。</p>
-      <p>試用期限：<code>2026年6月19日</code></p>
-    </div>
-    <div class="step">
-      <h3>Teamsへのアクセス確認</h3>
-      <p><code>teams.cloud.microsoft</code> からTeamsに正常アクセス。「個人事業」テナントでチャット・チャネルが利用可能な状態を確認。</p>
-    </div>
-  </div>
 
-  <div class="section">
-    <h2><span class="num">3</span>Azureサブスクリプションの準備</h2>
     <div class="step">
-      <h3>問題：Azure無料アカウントが対象外</h3>
-      <p>新規テナント・個人アカウントともに「You're not eligible for an Azure free account」と表示。過去に無料枠を使用済みのため。</p>
+      <h3>📋 アカウント作成手順</h3>
+      <ol>
+        <li>ブラウザで <code>microsoft.com/ja-jp/microsoft-365/business</code> にアクセス</li>
+        <li>「<strong>Microsoft 365 Business Standard</strong>」または「<strong>Business Basic</strong>」の「<strong>無料試用版</strong>」をクリック</li>
+        <li>メールアドレスを入力（GmailなどでもOK）</li>
+        <li>「職場または学校のアカウントの設定」に進む</li>
+        <li>会社名・ドメイン名を入力（例：<code>yourname.onmicrosoft.com</code>）</li>
+        <li>管理者ユーザー名とパスワードを設定してアカウント作成</li>
+      </ol>
+      <div class="note">💡 無料試用版は30〜90日間使用可能です。開発・テスト目的であれば十分な期間です。</div>
     </div>
+
     <div class="step">
-      <h3>解決：従量課金（Pay-as-you-go）で登録 ✅</h3>
-      <p>ハッカソン程度の開発であれば実費は数百〜1,000円程度。クレジットカード登録で即利用開始。</p>
-      <p>サブスクリプション名：<code>Azure subscription 1</code></p>
+      <h3>✅ 確認ポイント</h3>
+      <p>作成後、<code>admin.microsoft.com</code>（Microsoft 365 管理センター）にログインできればOKです。</p>
     </div>
   </div>
 
-  <div class="section">
+  <!-- STEP 2 -->
+  <div class="section" id="s2">
+    <h2><span class="num">2</span>Teamsの動作確認</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>作成したテナントでTeamsが使えることを確認します。後でボットをこのTeams環境に追加します。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 手順</h3>
+      <ol>
+        <li>ブラウザで <code>teams.cloud.microsoft</code> にアクセス</li>
+        <li>作成した管理者アカウントでサインイン（例：<code>admin@yourname.onmicrosoft.com</code>）</li>
+        <li>Teamsのチャット画面が表示されればOK</li>
+      </ol>
+      <div class="note">💡 Teamsデスクトップアプリがある場合は、そこからサインインしてもOKです。</div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="section" id="s3">
+    <h2><span class="num">3</span>Azureサブスクリプションの登録</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>Azure OpenAIやボットのバックエンドをホストするためのAzureアカウントを用意します。M365とAzureは<strong>別サービス</strong>のため、別途登録が必要です。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 無料アカウントでの登録手順</h3>
+      <ol>
+        <li>ブラウザで <code>portal.azure.com</code> にアクセス</li>
+        <li>「<strong>無料で始める</strong>」をクリック</li>
+        <li>Microsoftアカウントでサインイン（M365のアカウントでもOK）</li>
+        <li>氏名・電話番号・クレジットカード情報を入力（本人確認用、すぐ課金はされない）</li>
+        <li>利用規約に同意して登録完了</li>
+      </ol>
+      <div class="note">💡 無料アカウントでは <strong>$200クレジット（30日間）</strong> と、12ヶ月間の主要サービス無料枠が付与されます。ハッカソン開発程度であれば無料枠内で十分です。</div>
+      <div class="warn">⚠️ 過去にAzure無料アカウントを使用したことがある場合は「対象外」と表示されることがあります。その場合は「従量課金（Pay-as-you-go）」を選択してください。ハッカソン期間中の実費は数百〜1,000円程度です。</div>
+    </div>
+
+    <div class="step">
+      <h3>✅ 確認ポイント</h3>
+      <p>Azureポータルのホーム画面（クイックスタートセンター）が表示されればOKです。</p>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="section" id="s4">
     <h2><span class="num">4</span>Azure AI Foundryリソースの作成</h2>
+
     <div class="step">
-      <h3>Foundryリソース作成 ✅</h3>
-      <p>Azureポータル → Microsoft Foundry → Azure OpenAI → 「Foundry（おすすめ）」を選択して作成。</p>
-      <pre>リソースグループ: Hackathon2026
-リソース名:       Hackathon202604
-リージョン:       Japan East
-デフォルトプロジェクト: proj-default</pre>
+      <h3>🎯 この手順の目的</h3>
+      <p>Azure AI Foundryは、OpenAIモデルを含むAIサービスを一元管理するプラットフォームです。GPT-4oなどのモデルをデプロイして、アプリから呼び出せるようにします。</p>
     </div>
+
     <div class="step">
-      <h3>GPT-4oモデルのデプロイ ✅</h3>
-      <p>Foundryポータル → モデルカタログ → <code>gpt-4o</code> を検索 → 「このモデルを使用する」でデプロイ。</p>
-      <pre>デプロイ名:       gpt-4o
-展開の種類:       Standard
-プロビジョニング: 成功
-場所:             Japan East</pre>
+      <h3>📋 リソース作成手順</h3>
+      <ol>
+        <li>Azureポータル上部の検索バーに「<strong>Azure OpenAI</strong>」と入力</li>
+        <li>「Microsoft Foundry | Azure OpenAI」ページを開く</li>
+        <li>「<strong>+ 作成</strong>」→「<strong>Foundry（おすすめ）</strong>」をクリック</li>
+        <li>以下の項目を入力：</li>
+      </ol>
+      <pre>サブスクリプション:     （自分のサブスクリプションを選択）
+リソースグループ:       「新規作成」→ 任意の名前（例: hackathon-rg）
+名前:                   任意の名前（例: hackathon-foundry）※グローバルで一意な名前
+リージョン:             Japan East（日本から使う場合はここが最速）
+Default project name:   任意（例: proj-default）</pre>
+      <li style="list-style:none; margin-top:12px;">5. 「<strong>確認と作成</strong>」→「<strong>作成</strong>」をクリック</li>
+      <li style="list-style:none;">6. デプロイ完了まで1〜3分待つ</li>
+      <div class="note">💡 <strong>リソース名はURLに使われるため、英数字とハイフンのみ使用可能です。</strong>「hackathon-202604」のような形式がおすすめです。</div>
     </div>
+
     <div class="step">
-      <h3>APIキーとエンドポイントの取得 ✅</h3>
-      <p>リソース管理 → キーとエンドポイント → OpenAIタブで確認。</p>
-      <pre>エンドポイント: https://[リソース名].openai.azure.com/
-デプロイ名:     gpt-4o</pre>
-      <p>キー（SECRET）は <code>.env.local.user</code> に設定済み（GitHubには含めない）。</p>
+      <h3>✅ 確認ポイント</h3>
+      <p>概要ページで「<strong>状態：Succeeded</strong>」と表示されればリソース作成完了です。</p>
     </div>
   </div>
 
-  <div class="section">
-    <h2><span class="num">5</span>VS Code開発環境のセットアップ</h2>
+  <!-- STEP 5 -->
+  <div class="section" id="s5">
+    <h2><span class="num">5</span>GPT-4oモデルのデプロイ</h2>
+
     <div class="step">
-      <h3>Microsoft 365 Agents Toolkitのインストール ✅</h3>
-      <p>VS Code拡張機能マーケットプレイスで「Microsoft 365 Agents Toolkit」をインストール（旧名：Teams Toolkit）。</p>
+      <h3>🎯 この手順の目的</h3>
+      <p>リソースを作っただけではモデルは使えません。使いたいモデル（GPT-4o）を「デプロイ」することで、APIから呼び出せるようになります。</p>
     </div>
+
     <div class="step">
-      <h3>プロジェクトの生成 ✅</h3>
-      <p>Agents Toolkit → 「新しいエージェント/アプリの作成」→ 以下を選択：</p>
-      <pre>テンプレート: Teams エージェントとアプリ
-種類:         一般的なTeamsエージェント
-LLM:          Azure OpenAI
-言語:         Python</pre>
-      <p>生成先：<code>AgentsToolkitProjects\Hackathon2026</code>（後でプロジェクトフォルダに移動）</p>
+      <h3>📋 デプロイ手順</h3>
+      <ol>
+        <li>作成したFoundryリソースの概要ページで「<strong>Foundry ポータルに移動</strong>」をクリック</li>
+        <li>左サイドバーの「<strong>モデル カタログ</strong>」を開く</li>
+        <li>検索欄に「<strong>gpt-4o</strong>」と入力して検索</li>
+        <li>「gpt-4o」のカードをクリック</li>
+        <li>「<strong>このモデルを使用する</strong>」をクリック</li>
+        <li>デプロイ設定を確認して「<strong>デプロイ</strong>」をクリック</li>
+      </ol>
+      <pre>デプロイ名:   gpt-4o（デフォルトのままでOK）
+モデル版:     2024-05-13（最新の安定版）
+展開の種類:   Standard</pre>
+      <div class="note">💡 デプロイ名は後でコード内で使います。わかりやすい名前（<code>gpt-4o</code>）のままにしておくと管理が楽です。</div>
     </div>
+
     <div class="step">
-      <h3>環境変数の設定 ✅</h3>
-      <p>ファイル：<code>env/.env.local.user</code></p>
-      <pre>SECRET_AZURE_OPENAI_API_KEY=（設定済み）
+      <h3>✅ 確認ポイント</h3>
+      <p>デプロイ一覧で「<strong>プロビジョニングの状態：成功</strong>」と表示されればOKです。</p>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="section" id="s6">
+    <h2><span class="num">6</span>APIキーとエンドポイントの取得</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>コードからAzure OpenAIを呼び出すために必要な「エンドポイントURL」と「APIキー」を取得します。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 取得手順</h3>
+      <ol>
+        <li>Azureポータルで作成したFoundryリソースを開く</li>
+        <li>左サイドバー「<strong>リソース管理</strong>」→「<strong>キーとエンドポイント</strong>」をクリック</li>
+        <li>「<strong>キーの表示</strong>」ボタンをクリック</li>
+        <li>「<strong>OpenAI</strong>」タブをクリック</li>
+        <li>以下の2つをメモ・コピーしておく：</li>
+      </ol>
+      <pre>① キー1（または キー2）   ← 秘密にすること！GitHubに上げない！
+② 言語 API エンドポイント  ← https://[リソース名].openai.azure.com/</pre>
+      <div class="warn">⚠️ <strong>APIキーは絶対に公開しないでください。</strong>GitHubにアップする場合は <code>.gitignore</code> でキーを含むファイルを除外する必要があります。</div>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="section" id="s7">
+    <h2><span class="num">7</span>VS Code開発環境のセットアップ</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>Teamsアプリ開発に必要なツールをVS Codeに追加します。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 前提条件の確認</h3>
+      <p>以下がインストール済みであることを確認してください：</p>
+      <ul>
+        <li><strong>VS Code</strong>（最新版）</li>
+        <li><strong>Python 3.12以上 3.14未満</strong>（ターミナルで確認）</li>
+        <li><strong>Node.js</strong>（v18以上）</li>
+      </ul>
+      <pre>python --version   # Python 3.12.x または 3.13.x が表示されればOK
+node --version     # v18.x.x 以上が表示されればOK</pre>
+    </div>
+
+    <div class="step">
+      <h3>📋 Microsoft 365 Agents Toolkitのインストール</h3>
+      <ol>
+        <li>VS Codeを開く</li>
+        <li>左サイドバーの「拡張機能」アイコンをクリック（または <code>Ctrl+Shift+X</code>）</li>
+        <li>検索欄に「<strong>Microsoft 365 Agents Toolkit</strong>」と入力</li>
+        <li>Microsoftが公開している拡張機能を「<strong>インストール</strong>」</li>
+      </ol>
+      <div class="note">💡 旧名は「Teams Toolkit」です。検索しても出てこない場合は「Teams Toolkit」でも探してみてください。</div>
+    </div>
+  </div>
+
+  <!-- STEP 8 -->
+  <div class="section" id="s8">
+    <h2><span class="num">8</span>Teamsエージェントプロジェクトの生成</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>Toolkit付属のテンプレートから、Teams上で動くAIエージェントの雛形コードを自動生成します。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 プロジェクト生成手順</h3>
+      <ol>
+        <li>VS Code左サイドバーのM365アイコン（四角いロゴ）をクリック</li>
+        <li>「<strong>新しいエージェント/アプリの作成</strong>」をクリック</li>
+        <li>テンプレートを順番に選択：</li>
+      </ol>
+      <pre>① カテゴリ:     Teams エージェントとアプリ
+② 種類:         一般的なTeamsエージェント
+③ LLMサービス: Azure OpenAI
+④ APIキー:      Enterでスキップ（後で設定）
+⑤ 言語:         Python
+⑥ 保存先:       任意のフォルダ</pre>
+      <p style="margin-top:10px;">プロジェクトフォルダが自動で生成され、VS Codeで開かれます。</p>
+      <div class="note">💡 生成されるファイル構成：<br>
+        <code>appPackage/</code> — Teamsアプリのマニフェスト<br>
+        <code>env/</code> — 環境変数ファイル群<br>
+        <code>src/</code> — ボットの本体コード<br>
+        <code>infra/</code> — Azureデプロイ用インフラ定義
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 9 -->
+  <div class="section" id="s9">
+    <h2><span class="num">9</span>環境変数の設定と依存ライブラリのインストール</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>STEP 6で取得したAPIキーとエンドポイントをプロジェクトに設定し、必要なPythonライブラリをインストールします。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 環境変数の設定</h3>
+      <p>プロジェクト内の <code>env/.env.local.user</code> をVS Codeで開き、以下を編集します：</p>
+      <pre>SECRET_AZURE_OPENAI_API_KEY=（STEP6でコピーしたキーを貼り付け）
 AZURE_OPENAI_ENDPOINT='https://[リソース名].openai.azure.com/'
 AZURE_OPENAI_DEPLOYMENT_NAME='gpt-4o'</pre>
+      <div class="warn">⚠️ このファイルは <code>.gitignore</code> で除外されているため、Gitにコミットされません。チームで共有する場合はセキュアな方法（Azure Key Vault等）を使ってください。</div>
     </div>
-    <div class="step">
-      <h3>依存ライブラリのインストール ✅</h3>
-      <pre>python -m pip install -r src/requirements.txt</pre>
-      <p>エラーなしで完了。Pythonバージョン：<code>3.13.12</code></p>
-    </div>
-  </div>
 
-  <div class="section">
-    <h2><span class="num">6</span>次回やること</h2>
     <div class="step">
-      <h3>F5でローカルデバッグ起動</h3>
-      <p>VS CodeでF5キーを押してTeamsボットをローカル起動し、Teams上で動作確認する。</p>
+      <h3>📋 依存ライブラリのインストール</h3>
+      <p>VS Codeのターミナルを開き（<code>Ctrl+`</code>）、プロジェクトフォルダで以下を実行します：</p>
+      <pre>python -m pip install -r src/requirements.txt</pre>
+      <p>エラーが出なければインストール完了です。</p>
     </div>
+
     <div class="step">
-      <h3>エコーボットの動作確認</h3>
-      <p>Teams上でボットにメッセージを送り、GPT-4oが返答することを確認する。</p>
-    </div>
-    <div class="step">
-      <h3>酒場案内エージェントへのカスタマイズ</h3>
-      <p>音声入出力（Azure Speech Services）と位置情報・検索機能を追加し、ハッカソン用オリジナルボットに発展させる。</p>
+      <h3>🚀 次のステップ：ローカルでボットを起動する</h3>
+      <p>環境変数の設定とライブラリのインストールが完了したら、<code>F5</code>キーを押してデバッグを開始します。Toolkitが自動でTeams環境と接続し、ブラウザ上のTeamsでボットが起動します。</p>
+      <div class="note">💡 初回起動時はBot FrameworkやDev Tunnelの認証が求められる場合があります。画面の指示に従ってサインインしてください。</div>
     </div>
   </div>
 
 </div>
 
 <footer>
-  <p>Microsoft Agent Hackathon 2026 — with Claude Sonnet 4.6</p>
+  <p>Microsoft Agent Hackathon 2026 — 環境構築ガイド</p>
 </footer>
 
 </body>
