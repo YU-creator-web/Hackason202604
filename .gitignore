@@ -1,0 +1,21 @@
+# 環境変数・シークレット（絶対にコミットしない）
+Hackathon2026/env/.env.local.user
+Hackathon2026/env/.env.dev.user
+Hackathon2026/env/.env.playground.user
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# VS Code
+.vscode/settings.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# メモリ
+.claude/
