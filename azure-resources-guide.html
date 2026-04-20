@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Azureリソース比較ガイド — Teams Bot開発</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; line-height: 1.8; }
+
+    header { background: linear-gradient(135deg, #0078d4, #5c2d91); padding: 48px 24px; text-align: center; }
+    header h1 { font-size: 2rem; color: white; margin-bottom: 10px; }
+    header p { color: #cce4ff; font-size: 1rem; }
+
+    .container { max-width: 900px; margin: 48px auto; padding: 0 24px; }
+
+    .toc { background: #1a2744; border: 1px solid #0078d4; border-radius: 12px; padding: 24px; margin-bottom: 40px; }
+    .toc h2 { color: #4fc3f7; font-size: 1rem; margin-bottom: 14px; }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin-bottom: 6px; font-size: 0.9rem; }
+    .toc a { color: #90caf9; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    .section { background: #1a1d27; border-radius: 12px; padding: 32px; margin-bottom: 32px; border-left: 4px solid #0078d4; }
+    .section h2 { font-size: 1.2rem; color: #4fc3f7; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+    .section h2 .icon { font-size: 1.4rem; }
+
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .card { background: #12141e; border-radius: 10px; padding: 20px; border: 1px solid #2a2d3e; }
+    .card h3 { color: #a5d6a7; font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .card p { font-size: 0.88rem; color: #b0bec5; margin-bottom: 8px; }
+    .card ul { font-size: 0.88rem; color: #b0bec5; padding-left: 18px; }
+    .card li { margin-bottom: 5px; }
+
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; }
+    .tag.iaas { background: #3e2000; color: #ffcc80; }
+    .tag.paas { background: #0d3b00; color: #a5d6a7; }
+    .tag.saas { background: #1a0050; color: #ce93d8; }
+    .tag.dev { background: #001a3e; color: #90caf9; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { background: #0078d4; color: white; padding: 12px 14px; text-align: left; }
+    td { padding: 11px 14px; border-bottom: 1px solid #2a2d3e; color: #b0bec5; vertical-align: top; }
+    tr:hover td { background: #1e2235; }
+    .good { color: #66bb6a; }
+    .mid { color: #ffb74d; }
+    .bad { color: #ef5350; }
+
+    .arch { background: #0d0f18; border: 1px solid #1e2130; border-radius: 10px; padding: 20px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.85rem; color: #80cbc4; line-height: 2; margin: 16px 0; overflow-x: auto; }
+
+    .note { background: #0d2137; border-left: 3px solid #4fc3f7; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 12px; font-size: 0.88rem; color: #90caf9; }
+
+    .step { background: #12141e; border-radius: 8px; padding: 18px; margin-bottom: 14px; border: 1px solid #2a2d3e; }
+    .step h3 { color: #ce93d8; font-size: 0.95rem; margin-bottom: 10px; }
+    .step p { font-size: 0.88rem; color: #b0bec5; }
+    code { background: #0d0f18; color: #80cbc4; padding: 2px 8px; border-radius: 4px; font-family: 'Cascadia Code', monospace; font-size: 0.85rem; }
+
+    footer { text-align: center; padding: 40px; color: #546e7a; font-size: 0.85rem; border-top: 1px solid #1a1d27; margin-top: 24px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>☁️ Azureリソース比較ガイド</h1>
+  <p>Teams Bot開発で使うAzureサービスの違いと使い分け</p>
+</header>
+
+<div class="container">
+
+  <div class="toc">
+    <h2>📑 目次</h2>
+    <ol>
+      <li><a href="#s1">IaaS / PaaS の基本概念</a></li>
+      <li><a href="#s2">実行基盤の比較（VM / App Service / Container Apps）</a></li>
+      <li><a href="#s3">Teams Bot関連サービス（Bot Service / ACS）</a></li>
+      <li><a href="#s4">AI・データ系サービス（OpenAI / Cosmos DB）</a></li>
+      <li><a href="#s5">開発ツール（Microsoft 365 Agents Toolkit）</a></li>
+      <li><a href="#s6">Teams Bot全体アーキテクチャ</a></li>
+      <li><a href="#s7">用途別おすすめ選択</a></li>
+    </ol>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="section" id="s1">
+    <h2><span class="icon">🏗️</span>IaaS / PaaS の基本概念</h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <span class="tag iaas">IaaS</span>
+        <h3>🖥️ IaaS（インフラのみ）</h3>
+        <p><strong>Infrastructure as a Service</strong></p>
+        <p>土地だけ借りて、家を自分で建てるイメージ。OSのインストールからセキュリティ設定まで全て自分で管理する。</p>
+        <ul>
+          <li>自由度が高い</li>
+          <li>管理コストが高い</li>
+          <li>例：Azure VM</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag paas">PaaS</span>
+        <h3>🏢 PaaS（プラットフォーム）</h3>
+        <p><strong>Platform as a Service</strong></p>
+        <p>家具付きマンションを借りるイメージ。インフラはAzureが管理し、開発者はコードを書くことに集中できる。</p>
+        <ul>
+          <li>管理コストが低い</li>
+          <li>スケールしやすい</li>
+          <li>例：App Service / Container Apps</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag saas">SaaS</span>
+        <h3>☁️ SaaS（ソフトウェア）</h3>
+        <p><strong>Software as a Service</strong></p>
+        <p>完成したサービスをそのまま使うイメージ。インフラもアプリも全てプロバイダーが管理する。</p>
+        <ul>
+          <li>すぐ使える</li>
+          <li>カスタマイズは限定的</li>
+          <li>例：Microsoft Teams</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section" id="s2">
+    <h2><span class="icon">⚙️</span>実行基盤の比較</h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <span class="tag iaas">IaaS</span>
+        <h3>🖥️ Azure VM（Virtual Machine）</h3>
+        <p>仮想マシンをそのまま借りるサービス。OSから自分でセットアップする。</p>
+        <ul>
+          <li>OSの選択が自由（Windows / Linux）</li>
+          <li>特殊なライブラリも動かせる</li>
+          <li>常時起動のためコストが継続発生</li>
+          <li>セキュリティパッチも自分で当てる</li>
+          <li>現代のBot開発では使うケースは少ない</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag paas">PaaS</span>
+        <h3>🌐 Azure App Service</h3>
+        <p>Webアプリ・APIをすぐにホストできるフルマネージドサービス。コードをデプロイするだけで動く。</p>
+        <ul>
+          <li>Python / Node.js / Java など対応</li>
+          <li>GitやZIPからワンクリックデプロイ</li>
+          <li>SSL・カスタムドメイン対応</li>
+          <li>自動スケール設定可能</li>
+          <li><strong>Botのバックエンドに最もよく使われる</strong></li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag paas">PaaS+</span>
+        <h3>📦 Azure Container Apps</h3>
+        <p>Dockerコンテナをそのままデプロイできるサービス。マイクロサービス向け。</p>
+        <ul>
+          <li>コンテナイメージをそのまま動かせる</li>
+          <li>ゼロスケール対応（使わないときは無料）</li>
+          <li>複数サービスの連携が得意</li>
+          <li>Kubernetes不要で使いやすい</li>
+          <li>最近のBot開発で増えているトレンド</li>
+        </ul>
+      </div>
+    </div>
+
+    <table>
+      <tr>
+        <th>比較項目</th>
+        <th>VM</th>
+        <th>App Service</th>
+        <th>Container Apps</th>
+      </tr>
+      <tr>
+        <td>セットアップの手間</td>
+        <td class="bad">大きい</td>
+        <td class="good">小さい</td>
+        <td class="good">小さい</td>
+      </tr>
+      <tr>
+        <td>コスト（開発時）</td>
+        <td class="bad">常時発生</td>
+        <td class="mid">プラン次第</td>
+        <td class="good">使った分だけ</td>
+      </tr>
+      <tr>
+        <td>スケール</td>
+        <td class="bad">手動</td>
+        <td class="mid">設定が必要</td>
+        <td class="good">自動</td>
+      </tr>
+      <tr>
+        <td>自由度</td>
+        <td class="good">高い</td>
+        <td class="mid">中程度</td>
+        <td class="mid">中程度</td>
+      </tr>
+      <tr>
+        <td>管理コスト</td>
+        <td class="bad">高い</td>
+        <td class="good">低い</td>
+        <td class="good">低い</td>
+      </tr>
+      <tr>
+        <td>Bot開発での利用頻度</td>
+        <td class="bad">少ない</td>
+        <td class="good">多い</td>
+        <td class="good">増加中</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="section" id="s3">
+    <h2><span class="icon">🤖</span>Teams Bot関連サービス</h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <span class="tag paas">PaaS</span>
+        <h3>🔗 Azure Bot Service</h3>
+        <p>TeamsとBotバックエンドを繋ぐ「橋渡し」サービス。Botの登録・認証・ルーティングを担当する。</p>
+        <ul>
+          <li>Teams / Slack / Webなど複数チャネルに対応</li>
+          <li>Microsoft App IDの発行と管理</li>
+          <li>メッセージのルーティング処理</li>
+          <li>Bot Framework SDKと連携</li>
+          <li><strong>Teamsボット開発では必須のサービス</strong></li>
+        </ul>
+        <div class="note" style="margin-top:12px;">💡 「ボットそのもの」ではなく、TeamsとBotを繋ぐ「受付窓口」のイメージ。</div>
+      </div>
+      <div class="card">
+        <span class="tag paas">PaaS</span>
+        <h3>📞 ACS（Azure Communication Services）</h3>
+        <p>音声・ビデオ・チャット・SMSなどのリアルタイム通信機能をアプリに追加できるサービス。</p>
+        <ul>
+          <li>Teams会議への参加・録音が可能</li>
+          <li>音声のリアルタイム文字起こし</li>
+          <li>Teams Interop（Teamsとの相互接続）</li>
+          <li>Call Automationで通話を自動処理</li>
+          <li><strong>会議内容を学習するBotに最適</strong></li>
+        </ul>
+        <div class="note" style="margin-top:12px;">💡 ACSをTeams会議に「参加者」として入室させ、音声をキャプチャして文字起こしする使い方が一般的。</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>🔄 Bot Service と ACS の役割分担</h3>
+      <p><strong>Azure Bot Service</strong>：チャット上のメッセージのやり取りを処理（テキストベースの会話）</p>
+      <p><strong>ACS</strong>：会議・音声・ビデオなどのリアルタイム通信を処理（音声→テキスト変換を含む）</p>
+      <p style="margin-top:8px;">両方を組み合わせることで、「テキストチャット」と「会議音声の学習」を同時に実現できる。</p>
+    </div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="section" id="s4">
+    <h2><span class="icon">🧠</span>AI・データ系サービス</h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <span class="tag paas">PaaS</span>
+        <h3>✨ Azure OpenAI Service</h3>
+        <p>OpenAIのGPT-4oなどのモデルをAzureのセキュリティ基盤上で使えるサービス。</p>
+        <ul>
+          <li>GPT-4o / GPT-4o mini などのモデルを利用可能</li>
+          <li>企業向けセキュリティ・プライバシー対応</li>
+          <li>APIキーで簡単に呼び出し可能</li>
+          <li>Azure Foundryから管理・デプロイ</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag paas">PaaS</span>
+        <h3>🗄️ Azure Cosmos DB</h3>
+        <p>フルマネージドのNoSQLデータベース。会話履歴や学習データの保存に適している。</p>
+        <ul>
+          <li>JSONドキュメントをそのまま保存</li>
+          <li>グローバル分散対応</li>
+          <li>自動スケール</li>
+          <li>Botの会話履歴・ユーザー情報の保存に最適</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag paas">PaaS</span>
+        <h3>🔍 Azure AI Speech</h3>
+        <p>音声をテキストに変換（STT）、またはテキストを音声に変換（TTS）するサービス。</p>
+        <ul>
+          <li>日本語対応のリアルタイム音声認識</li>
+          <li>会議の文字起こしに活用</li>
+          <li>テキスト読み上げ（音声案内ボットに活用）</li>
+          <li>ACSと組み合わせて使うケースが多い</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5 -->
+  <div class="section" id="s5">
+    <h2><span class="icon">🛠️</span>開発ツール：Microsoft 365 Agents Toolkit</h2>
+
+    <div class="step">
+      <h3>📌 Toolkitとは？</h3>
+      <p>VS Codeの拡張機能。Azureリソースそのものではなく、Teams Botの開発・テスト・デプロイを効率化する<strong>開発補助ツール</strong>。</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>💻 ローカル開発フェーズ</h3>
+        <ul>
+          <li><code>F5</code> でローカルサーバーを起動</li>
+          <li>Playgroundでチャットをシミュレート</li>
+          <li>Azureなしで素早く動作確認</li>
+          <li>コードを変えてすぐ試せる</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>☁️ Azureデプロイフェーズ</h3>
+        <ul>
+          <li>Azure Bot Serviceを自動登録</li>
+          <li>App Service / Container Appsに自動デプロイ</li>
+          <li>Teams App Manifestを自動生成</li>
+          <li>本物のTeamsで動作確認できる</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="arch">
+【開発の流れ】
+
+  コード編集
+      ↓
+  F5 → Playground で確認（ローカル・無料・速い）
+      ↓
+  問題なければ Provision → Deploy（Azureへ）
+      ↓
+  本物のTeamsで動作確認
+      ↓
+  また編集 → F5 → ...（繰り返し）
+    </div>
+  </div>
+
+  <!-- SECTION 6 -->
+  <div class="section" id="s6">
+    <h2><span class="icon">🏛️</span>Teams Bot全体アーキテクチャ</h2>
+
+    <div class="arch">
+【Teams Bot（テキストチャット）の基本構成】
+
+  Teams（ユーザーがメッセージ送信）
+      ↓
+  Azure Bot Service（受付・認証・ルーティング）
+      ↓
+  App Service / Container Apps（ボット本体のコード）
+      ↓
+  Azure OpenAI（GPT-4oで返答生成）
+      ↓
+  Azure Cosmos DB（会話履歴の保存）
+      ↓
+  Teams（ユーザーへ返答）
+
+
+【Teams会議学習ボットの構成（ACS追加版）】
+
+  Teams会議（音声）
+      ↓
+  ACS（会議参加・音声キャプチャ）
+      ↓
+  Azure AI Speech（音声→テキスト変換）
+      ↓
+  Azure OpenAI（内容を要約・学習）
+      ↓
+  Azure Cosmos DB（学習内容を保存）
+      ↑
+  Azure Bot Service ← Teams チャット
+      ↓
+  「この会議でこんな話が出ていましたよ」と返答
+    </div>
+  </div>
+
+  <!-- SECTION 7 -->
+  <div class="section" id="s7">
+    <h2><span class="icon">🎯</span>用途別おすすめ選択</h2>
+
+    <table>
+      <tr>
+        <th>やりたいこと</th>
+        <th>使うサービス</th>
+      </tr>
+      <tr>
+        <td>シンプルなテキスト応答ボット</td>
+        <td>Bot Service + App Service + Azure OpenAI</td>
+      </tr>
+      <tr>
+        <td>会議の内容を学習するボット</td>
+        <td>Bot Service + ACS + AI Speech + Azure OpenAI + Cosmos DB</td>
+      </tr>
+      <tr>
+        <td>音声で案内するボット</td>
+        <td>Bot Service + Azure OpenAI + AI Speech（TTS）</td>
+      </tr>
+      <tr>
+        <td>コンテナで動かしたい</td>
+        <td>Bot Service + Container Apps + Azure OpenAI</td>
+      </tr>
+      <tr>
+        <td>ローカルで素早く試したい</td>
+        <td>Microsoft 365 Agents Toolkit（Playground）</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  <p>Microsoft Agent Hackathon 2026 — Azureリソース比較ガイド</p>
+</footer>
+
+</body>
+</html>
