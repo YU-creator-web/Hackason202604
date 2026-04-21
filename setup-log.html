@@ -69,6 +69,7 @@
       <li><a href="#s11">Teams管理センターでカスタムアプリのアップロードを有効化</a></li>
       <li><a href="#s12">AzureへのProvision（準備）とDeploy（配置）</a></li>
       <li><a href="#s13">Dev Tunnelを使った本物のTeamsでの動作確認</a></li>
+      <li><a href="#s14">ACS（Azure Communication Services）リソースの作成</a></li>
     </ol>
   </div>
 
@@ -512,6 +513,59 @@ AZURE_OPENAI_DEPLOYMENT_NAME='gpt-4o'</pre>
         <li>PCをシャットダウンするとボットが応答しなくなる</li>
         <li>永続的な公開にはAzure App Serviceへのデプロイが必要（クォータ問題解決後）</li>
       </ul>
+    </div>
+  </div>
+
+  <!-- STEP 14 -->
+  <div class="section" id="s14">
+    <h2><span class="num">14</span>ACS（Azure Communication Services）リソースの作成</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>ACS（Azure Communication Services）はTeams会議にボットを参加させて音声を受信・処理するためのサービスです。App Serviceとは別のクォータ体系のため、新規サブスクリプションでも作成できます。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 ACSリソースの作成手順</h3>
+      <ol>
+        <li>Azure ポータルの検索バーで <strong>「Communication Services」</strong> と入力してクリック</li>
+        <li><strong>「作成」</strong> をクリック</li>
+        <li>リソースグループ：既存の <code>Hackathon2026</code> を選択</li>
+        <li>リソース名：任意（例：<code>hackathon2026</code>）</li>
+        <li>データの保存場所：<strong>Japan</strong></li>
+        <li>「確認と作成」→「作成」をクリック</li>
+      </ol>
+      <div class="note">💡 ACSリソースの場所は「グローバル」と表示されますが、データは選択したリージョンに保存されます。</div>
+    </div>
+
+    <div class="step">
+      <h3>📋 接続文字列（Connection String）の取得</h3>
+      <ol>
+        <li>作成したACSリソースを開く</li>
+        <li>左メニューの <strong>「設定」→「Keys」</strong> をクリック</li>
+        <li><strong>Primary key</strong> の <strong>「Connection string」</strong> 右のコピーアイコンをクリック</li>
+        <li><code>env/.env.local.user</code> に以下の形式で追加：</li>
+      </ol>
+      <pre>SECRET_ACS_CONNECTION_STRING=endpoint=https://（リソース名）.japan.communication.azure.com/;accesskey=（キー）</pre>
+      <div class="warn">⚠️ 「Key」だけでなく「Connection string」をコピーしてください。Connection stringは endpoint と accesskey が1つにまとまった文字列です。</div>
+    </div>
+
+    <div class="step">
+      <h3>📋 ACS SDKのインストール</h3>
+      <p>以下のコマンドでPython用ACS SDKをインストールします：</p>
+      <pre>& 'C:\Users\[ユーザー名]\AppData\Local\Programs\Python\Python313\python.exe' -m pip install azure-communication-callautomation azure-communication-identity</pre>
+    </div>
+
+    <div class="step">
+      <h3>📋 接続テストの実行</h3>
+      <p><code>src/test_acs.py</code> を実行してACSへの接続を確認します：</p>
+      <pre>& 'C:\Users\[ユーザー名]\AppData\Local\Programs\Python\Python313\python.exe' src/test_acs.py</pre>
+      <div class="note">💡 ACSリソース作成直後はDNSの反映に5〜15分かかる場合があります。<code>Failed to resolve</code> エラーが出た場合は少し待ってから再実行してください。</div>
+      <p>成功すると以下のような出力が表示されます：</p>
+      <pre>✅ ACS接続成功！
+   ボット用ユーザーID: 8:acs:xxxx-xxxx-xxxx
+✅ テストユーザー削除完了（クリーンアップ済み）
+🎉 ACSは正常に動作しています！</pre>
     </div>
   </div>
 

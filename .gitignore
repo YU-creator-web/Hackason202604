@@ -1,7 +1,5 @@
 # 環境変数・シークレット（絶対にコミットしない）
-Hackathon2026/env/.env.local.user
-Hackathon2026/env/.env.dev.user
-Hackathon2026/env/.env.playground.user
+Hackathon2026/env/
 
 # Python
 __pycache__/
