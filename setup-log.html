@@ -65,6 +65,10 @@
       <li><a href="#s7">VS Code開発環境のセットアップ</a></li>
       <li><a href="#s8">Teamsエージェントプロジェクトの生成</a></li>
       <li><a href="#s9">環境変数の設定と依存ライブラリのインストール</a></li>
+      <li><a href="#s10">ローカルデバッグの起動とPlaygroundでの動作確認</a></li>
+      <li><a href="#s11">Teams管理センターでカスタムアプリのアップロードを有効化</a></li>
+      <li><a href="#s12">AzureへのProvision（準備）とDeploy（配置）</a></li>
+      <li><a href="#s13">Dev Tunnelを使った本物のTeamsでの動作確認</a></li>
     </ol>
   </div>
 
@@ -451,6 +455,62 @@ AZURE_OPENAI_DEPLOYMENT_NAME='gpt-4o'</pre>
         <li>Azure AI Speech を使った音声入出力（STT / TTS）の追加</li>
         <li>Teams Tabアプリとしてマイク入力UIの実装</li>
         <li>ACS（Azure Communication Services）を使った会議参加・音声文字起こし</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 13 -->
+  <div class="section" id="s13">
+    <h2><span class="num">13</span>Dev Tunnelを使った本物のTeamsでの動作確認</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>AzureへのProvisionがApp Serviceのクォータ制限で失敗する場合でも、<strong>Dev Tunnel</strong>という機能を使えばローカルで動作するボットを本物のTeamsに接続できます。ボットはPCで起動し続けている必要がありますが、開発・テスト用途には十分です。</p>
+    </div>
+
+    <div class="step">
+      <h3>⚠️ よくあるエラー：.env.dev.user の環境変数が空</h3>
+      <p>Provisionを実行すると <code>arm.MissingEnvironmentVariablesError</code> が出る場合があります。Azureデプロイ用の環境変数ファイル（<code>env/.env.dev.user</code>）が空のためです。</p>
+      <p><code>env/.env.local.user</code> と同じ内容を <code>env/.env.dev.user</code> にも設定してください：</p>
+      <pre>SECRET_AZURE_OPENAI_API_KEY=（Azure OpenAIのAPIキー）
+AZURE_OPENAI_ENDPOINT='https://（your-resource）.openai.azure.com/'
+AZURE_OPENAI_DEPLOYMENT_NAME='gpt-4o'</pre>
+      <div class="note">💡 ローカル用（.env.local.user）と本番用（.env.dev.user）は別ファイルです。両方に設定が必要です。</div>
+    </div>
+
+    <div class="step">
+      <h3>⚠️ よくあるエラー：App Service クォータ不足</h3>
+      <p>新規サブスクリプションでは、App Service Plan（F1/B1/S1など全プラン）のVM クォータが 0 に設定されており、<code>armDeploy.DeployArmError</code> が発生します。Azure ポータルのクォータページ（App Service Public Preview）でも申請ボタンがグレーアウトされており、現時点での申請は不可能です。</p>
+      <div class="warn">⚠️ この問題はAzureサブスクリプション作成直後に発生しやすいです。時間をおいて再試行するか、下記のDev Tunnelを使った方法で回避してください。</div>
+    </div>
+
+    <div class="step">
+      <h3>📋 Dev Tunnelを使ってTeamsで起動する手順</h3>
+      <ol>
+        <li>VS Codeの上部デバッグ設定ドロップダウン（▼）をクリック</li>
+        <li><strong>「Debug in Teams (Desktop)」</strong> を選択（Playgroundではなく Teams）</li>
+        <li><strong>F5</strong> を押す</li>
+        <li>自動でプロビジョニング（6/6ステージ）と配置（1/1ステージ）が実行される</li>
+        <li>Teamsデスクトップアプリが起動し、ボットのインストールダイアログが表示される</li>
+        <li>「追加」をクリックしてボットをTeamsに追加</li>
+        <li>Teamsの左サイドバー下部「<strong>アプリ</strong>」からボットを呼び出す</li>
+      </ol>
+      <div class="note">💡 Dev Tunnelはローカルで動作するボットをインターネット経由でTeamsに公開するトンネル技術です。App Serviceのクォータ問題を回避でき、Azureのリソース料金も発生しません。</div>
+    </div>
+
+    <div class="step">
+      <h3>✅ 動作確認</h3>
+      <p>Teamsのチャット画面でボットにメッセージを送り、GPT-4oによる返答が返ってくることを確認します。</p>
+      <img src="picture/Teams_chat_app.png" alt="Teams上でボットが返答している画面" style="width:100%; border-radius:8px; margin-top:12px; border:1px solid #2a2d3e;">
+      <p style="margin-top:10px;">「AI により生成」と表示され、GPT-4oの返答が届いていれば成功です。</p>
+    </div>
+
+    <div class="step">
+      <h3>📝 この方法の制限事項</h3>
+      <ul>
+        <li>VS Codeとローカルのボットサーバーが起動している間だけTeamsで使用できる</li>
+        <li>PCをシャットダウンするとボットが応答しなくなる</li>
+        <li>永続的な公開にはAzure App Serviceへのデプロイが必要（クォータ問題解決後）</li>
       </ul>
     </div>
   </div>
