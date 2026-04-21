@@ -329,6 +329,132 @@ AZURE_OPENAI_DEPLOYMENT_NAME='gpt-4o'</pre>
     </div>
   </div>
 
+  <!-- STEP 10 -->
+  <div class="section" id="s10">
+    <h2><span class="num">10</span>ローカルデバッグの起動とPlaygroundでの動作確認</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>F5キーでボットをローカル起動し、Microsoft 365 Agents Playgroundを使ってTeams上の動作をシミュレートします。Azureへのデプロイ前にコードを素早く検証できます。</p>
+    </div>
+
+    <div class="step">
+      <h3>⚠️ よくあるエラー：ModuleNotFoundError</h3>
+      <p>F5起動時に <code>ModuleNotFoundError: No module named 'azure'</code> が表示される場合、デバッガーが使用するPythonインタープリターと、ライブラリをインストールしたPython環境が異なることが原因です。</p>
+      <p>ターミナルのエラーメッセージに表示されているPythonのフルパスを使って、再度インストールします：</p>
+      <pre># エラーメッセージ内のPythonパスを使ってインストール（例）
+& 'C:\Users\[ユーザー名]\AppData\Local\Programs\Python\Python313\python.exe' -m pip install -r src/requirements.txt</pre>
+      <div class="note">💡 VS Codeで使用するPythonインタープリターは <code>Ctrl+Shift+P</code> → 「Python: インタープリターを選択」で確認・変更できます。</div>
+    </div>
+
+    <div class="step">
+      <h3>⚠️ よくあるエラー：ポート3978が使用中</h3>
+      <p>F5を複数回押すと <code>OSError: [WinError 10048]</code>（ポート3978が既に使用中）というエラーが発生します。</p>
+      <p>デバッグツールバーの <strong>■（停止）ボタン</strong> を押してすべてのデバッグセッションを終了してから、再度F5を押してください。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 ローカルデバッグの正しい起動手順</h3>
+      <ol>
+        <li>VS Codeで <strong>プロジェクトフォルダ（Hackathon2026）を直接開く</strong>（親フォルダではなく、プロジェクト直下を開くこと）</li>
+        <li>エディタ上のタブをすべて閉じ、ファイルを選択していない状態にする</li>
+        <li><code>F5</code>キーを押す（または「実行」→「デバッグの開始」）</li>
+        <li>ブラウザが自動で開き、<strong>Microsoft 365 Agents Playground</strong> が表示される</li>
+        <li>「<strong>Personal Chat</strong>」をクリックし、メッセージを送信して返答が返ってくることを確認</li>
+      </ol>
+      <div class="note">💡 Playgroundは本物のTeamsを使わずにボットの動作をシミュレートできるブラウザ上のテスト環境です。Azure接続なしで動作するため、開発サイクルが速くなります。</div>
+    </div>
+
+    <div class="step">
+      <h3>✅ 確認ポイント</h3>
+      <p>Playgroundの右側「Log Panel」に <code>Connected.</code> と表示され、チャットでメッセージを送ると返答が返ってくればローカル動作確認完了です。</p>
+    </div>
+  </div>
+
+  <!-- STEP 11 -->
+  <div class="section" id="s11">
+    <h2><span class="num">11</span>Teams管理センターでカスタムアプリのアップロードを有効化</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>Toolkitを使って本物のTeamsにボットをデプロイするには、テナントでカスタムアプリのアップロードが許可されている必要があります。デフォルトでは無効のため、Teams管理センターで設定を変更します。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 設定手順</h3>
+      <ol>
+        <li>ブラウザで <code>admin.teams.microsoft.com</code> にアクセス</li>
+        <li>管理者アカウントでサインイン</li>
+        <li>左メニューの「<strong>Teams のアプリ</strong>」→「<strong>セットアップ ポリシー</strong>」をクリック</li>
+        <li>「<strong>グローバル（組織全体の既定値）</strong>」をクリックして開く</li>
+        <li>「<strong>カスタムアプリのアップロード</strong>」トグルを <strong>オン</strong> に切り替える</li>
+        <li>「<strong>保存</strong>」をクリック</li>
+      </ol>
+      <div class="warn">⚠️ この設定は反映まで <strong>最大24時間</strong> かかる場合があります。設定後すぐに反映されない場合は時間をおいて再試行してください。</div>
+      <div class="note">💡 VS Code側でエラーが出る場合は、左サイドバーのM365アイコン → ACCOUNTSでアカウントを一度サインアウト→再サインインすると解消されることがあります。</div>
+    </div>
+
+    <div class="step">
+      <h3>✅ 確認ポイント</h3>
+      <p>VS CodeのM365 Agents ToolkitパネルのACCOUNTSセクションで「<strong>Custom App Upload Enabled</strong>」と表示されれば設定完了です。</p>
+    </div>
+  </div>
+
+  <!-- STEP 12 -->
+  <div class="section" id="s12">
+    <h2><span class="num">12</span>AzureへのProvision（準備）とDeploy（配置）</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>ローカルで動作確認できたボットを、本物のTeams環境で使えるようにAzureにデプロイします。ToolkitのLIFECYCLE機能を使うと、Azure Bot Serviceの登録やApp Serviceへのデプロイが自動で行われます。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 Provision（準備）手順</h3>
+      <p>Azureにリソースを作成し、ボットを登録します。</p>
+      <ol>
+        <li>VS CodeでプロジェクトフォルダをワークスペースとしてM365 Agents Toolkitを開く</li>
+        <li>左サイドバーのM365アイコンをクリック</li>
+        <li>「<strong>LIFECYCLE</strong>」セクションの「<strong>準備</strong>」をクリック</li>
+        <li>サインインを求められた場合はM365管理者アカウントでサインイン</li>
+        <li>Azureサブスクリプションとリソースグループを選択</li>
+        <li>プロビジョニング完了まで待つ</li>
+      </ol>
+      <div class="note">💡 Provisionでは Azure Bot Service・App Service などのリソースが自動作成されます。完了後に <code>env/.env.dev</code> にBOT_IDなどの値が自動で書き込まれます。</div>
+    </div>
+
+    <div class="step">
+      <h3>📋 Deploy（配置）手順</h3>
+      <p>ローカルのコードをAzureのApp Serviceにアップロードします。</p>
+      <ol>
+        <li>「<strong>LIFECYCLE</strong>」セクションの「<strong>配置</strong>」をクリック</li>
+        <li>デプロイ完了のメッセージが表示されるまで待つ</li>
+      </ol>
+      <pre>配置ステージ 2/2 アクションが正常に実行されました。</pre>
+      <p>上記メッセージが表示されればデプロイ成功です。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 Teamsへのインストール手順</h3>
+      <ol>
+        <li>「<strong>LIFECYCLE</strong>」セクションの「<strong>組織に公開</strong>」をクリック</li>
+        <li>または Teamsを開き「アプリ」→「カスタムアプリをアップロード」でzipファイルを選択</li>
+        <li>zipファイルは <code>appPackage/build/</code> フォルダ内に生成されています</li>
+      </ol>
+      <div class="note">💡 初回デプロイ後、Teamsにボットが表示されるまで数分かかる場合があります。</div>
+    </div>
+
+    <div class="step">
+      <h3>✅ 次のステップ</h3>
+      <p>本物のTeamsでボットとチャットできることを確認したら、次は以下の機能追加に進みます：</p>
+      <ul>
+        <li>Azure AI Speech を使った音声入出力（STT / TTS）の追加</li>
+        <li>Teams Tabアプリとしてマイク入力UIの実装</li>
+        <li>ACS（Azure Communication Services）を使った会議参加・音声文字起こし</li>
+      </ul>
+    </div>
+  </div>
+
 </div>
 
 <footer>
