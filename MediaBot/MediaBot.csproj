@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!--
+      net48 = .NET Framework 4.8（古いが現役）
+      Application Hosted Media Bot の Media SDK がこれしか対応していない。
+      会社の実装が Windows VM を使う理由がここにある。
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Graph Communications SDK（シグナリング） -->
+    <PackageReference Include="Microsoft.Graph.Communications.Client" Version="1.2.0.4161" />
+    <!-- Graph Communications Media SDK（リアルタイム音声） net48 専用 -->
+    <PackageReference Include="Microsoft.Graph.Communications.Calls.Media" Version="1.2.0.4161" />
+    <!-- Microsoft Graph SDK（Call, Modality, OrganizerMeetingInfo など） Graph.Core 2.x 互換 -->
+    <PackageReference Include="Microsoft.Graph" Version="4.54.0" />
+    <!-- MSAL: Azure AD トークン取得（Communications SDK 認証プロバイダー用） -->
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
+    <!-- Azure Speech SDK（STT） -->
+    <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.37.0" />
+    <!-- OWIN: .NET Framework 用の Web ホスティング基盤 -->
+    <PackageReference Include="Microsoft.Owin.SelfHost" Version="4.2.2" />
+    <!-- WebAPI: .NET Framework 用の REST API フレームワーク（ASP.NET Core の前身） -->
+    <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.3.0" />
+    <!-- DI コンテナ（ASP.NET Core の DI に相当） -->
+    <PackageReference Include="Unity.WebAPI" Version="5.4.0" />
+  </ItemGroup>
+
+</Project>

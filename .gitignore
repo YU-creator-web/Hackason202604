@@ -1,5 +1,10 @@
 # 環境変数・シークレット（絶対にコミットしない）
 Hackathon2026/env/
+MediaBot/appsettings.json
+
+# .NET ビルド成果物
+MediaBot/bin/
+MediaBot/obj/
 
 # Python
 __pycache__/

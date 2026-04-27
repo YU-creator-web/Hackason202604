@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Hosted Media Bot 実装ガイド</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; line-height: 1.8; }
+
+    header { background: linear-gradient(135deg, #1a3a1a, #0d5c2e); padding: 48px 24px; text-align: center; }
+    header h1 { font-size: 2rem; color: white; margin-bottom: 10px; }
+    header p { color: #a5d6a7; font-size: 1rem; }
+
+    .container { max-width: 860px; margin: 48px auto; padding: 0 24px; }
+
+    .toc { background: #1a2a1a; border: 1px solid #2e7d32; border-radius: 12px; padding: 24px; margin-bottom: 40px; }
+    .toc h2 { color: #81c784; font-size: 1rem; margin-bottom: 14px; }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin-bottom: 6px; font-size: 0.9rem; }
+    .toc a { color: #a5d6a7; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    .section { background: #1a1d27; border-radius: 12px; padding: 32px; margin-bottom: 32px; border-left: 4px solid #2e7d32; }
+    .section h2 { font-size: 1.2rem; color: #81c784; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+    .section h2 .num { background: #2e7d32; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; font-weight: bold; }
+
+    .step { background: #12141e; border-radius: 8px; padding: 18px; margin-bottom: 14px; border: 1px solid #2a2d3e; }
+    .step h3 { color: #a5d6a7; font-size: 0.95rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .step p { font-size: 0.9rem; color: #b0bec5; margin-bottom: 8px; }
+    .step p:last-child { margin-bottom: 0; }
+    .step ul, .step ol { font-size: 0.9rem; color: #b0bec5; padding-left: 20px; }
+    .step li { margin-bottom: 6px; }
+
+    code { background: #0d0f18; color: #80cbc4; padding: 2px 8px; border-radius: 4px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.85rem; }
+    pre { background: #0d0f18; color: #80cbc4; padding: 14px 16px; border-radius: 8px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.85rem; margin-top: 10px; overflow-x: auto; border: 1px solid #1e2130; line-height: 1.6; }
+
+    .note { background: #0d2137; border-left: 3px solid #4fc3f7; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 10px; font-size: 0.88rem; color: #90caf9; }
+    .warn { background: #1a1100; border-left: 3px solid #ffb74d; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 10px; font-size: 0.88rem; color: #ffcc80; }
+    .success { background: #0d1f0d; border-left: 3px solid #66bb6a; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 10px; font-size: 0.88rem; color: #a5d6a7; }
+
+    .arch-box { background: #0d0f18; border: 1px solid #2a2d3e; border-radius: 8px; padding: 20px; margin-top: 12px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.82rem; color: #80cbc4; line-height: 1.7; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.88rem; }
+    th { background: #1e2a1e; color: #81c784; padding: 8px 12px; text-align: left; border-bottom: 1px solid #2e7d32; }
+    td { padding: 8px 12px; border-bottom: 1px solid #1e2130; color: #b0bec5; }
+    tr:last-child td { border-bottom: none; }
+
+    footer { text-align: center; padding: 40px; color: #546e7a; font-size: 0.85rem; border-top: 1px solid #1a1d27; margin-top: 24px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎙️ Application Hosted Media Bot</h1>
+  <p>Teams 音声会議への参加・STT・GPT-4o 応答 実装ガイド（C# / .NET Framework 4.8）</p>
+</header>
+
+<div class="container">
+
+  <div class="toc">
+    <h2>📑 目次</h2>
+    <ol>
+      <li><a href="#s1">Application Hosted Media Bot とは</a></li>
+      <li><a href="#s2">.NET SDK のインストールと MediaBot プロジェクトの作成</a></li>
+      <li><a href="#s3">NuGet パッケージの追加と役割</a></li>
+      <li><a href="#s4">ソースコードの実装（7ファイル）</a></li>
+      <li><a href="#s5">Azure Speech Services リソースの作成</a></li>
+      <li><a href="#s6">appsettings.json の設定</a></li>
+      <li><a href="#s7">ビルドとよくあるエラーの修正</a></li>
+      <li><a href="#s8">Speech SDK 単体テスト（マイク → STT）</a></li>
+      <li><a href="#s9">双方向会話テスト（STT → GPT-4o → TTS）</a></li>
+      <li><a href="#s10">本番環境（Azure Windows VM）へのデプロイ概要</a></li>
+    </ol>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section" id="s1">
+    <h2><span class="num">1</span>Application Hosted Media Bot とは</h2>
+
+    <div class="step">
+      <h3>🎯 この実装を学ぶ目的</h3>
+      <p>Teams 会議に Bot としてリアルタイム参加し、参加者の音声を受信・文字起こし・AI 応答できるアーキテクチャを理解します。会社の実装と同じ構成です。</p>
+    </div>
+
+    <div class="step">
+      <h3>📐 音声の流れ（アーキテクチャ）</h3>
+      <div class="arch-box">Teams 会議（参加者が発話）
+  │
+  │ SRTP / UDP（暗号化音声ストリーム）
+  ▼
+Media SDK（Windows DLL）
+  │ AudioSocket.AudioMediaReceived（20ms ごとに発火）
+  ▼
+CallHandler.OnAudioMediaReceived()
+  │ Marshal.Copy → byte[] に変換（640 バイト / 20ms）
+  ▼
+PushAudioInputStream.Write(data)
+  │ PCM 16kHz 16bit mono
+  ▼
+Azure Speech SDK（SpeechRecognizer）
+  │ Recognized イベント → 確定テキスト
+  ▼
+GPT-4o（Azure OpenAI）→ 応答テキスト生成
+  ▼
+（本番）AudioSocket で Teams に音声送信</div>
+    </div>
+
+    <div class="step">
+      <h3>🆚 ACS Call Automation との違い</h3>
+      <table>
+        <tr><th>比較項目</th><th>Application Hosted Media Bot</th><th>ACS Call Automation</th></tr>
+        <tr><td>参加方法</td><td>Graph Communications SDK 経由で Teams 会議に参加</td><td>ACS 経由でコールに参加</td></tr>
+        <tr><td>音声処理</td><td>ボット自身が音声を受信・処理（Application Hosted）</td><td>Azure のクラウド側で処理</td></tr>
+        <tr><td>言語</td><td>C#（.NET Framework 4.8）のみ</td><td>Python / C# / Java 等</td></tr>
+        <tr><td>OS</td><td>Windows 必須（Media SDK が Windows DLL）</td><td>どこでも動く</td></tr>
+        <tr><td>柔軟性</td><td>音声バイト列に直接アクセス可能（高い）</td><td>Azure 側の処理に依存（低い）</td></tr>
+      </table>
+    </div>
+
+    <div class="step">
+      <h3>⚠️ なぜ .NET Framework 4.8 / Windows 必須なのか</h3>
+      <p><code>Microsoft.Graph.Communications.Calls.Media</code> SDK は内部的に Windows 専用のネイティブ DLL（<code>Microsoft.Skype.Bots.Media.dll</code> 等）を使用しています。このため：</p>
+      <ul>
+        <li><strong>.NET Framework 4.8</strong>（net48）が必須 — .NET 8 や Linux では動作しない</li>
+        <li><strong>Windows 環境</strong>が必須 — Azure Linux App Service や AWS Linux では動作しない</li>
+        <li>会社の実装が Azure Windows VM を使っている理由がここにある</li>
+      </ul>
+      <div class="note">💡 Web サーバーは ASP.NET Core（.NET 8 用）ではなく、OWIN（Open Web Interface for .NET）を使います。OWIN は .NET Framework 時代の Web ホスティング基盤です。</div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section" id="s2">
+    <h2><span class="num">2</span>.NET SDK のインストールと MediaBot プロジェクトの作成</h2>
+
+    <div class="step">
+      <h3>📋 .NET SDK のインストール確認</h3>
+      <p>ターミナルで以下を実行してインストール済みか確認します：</p>
+      <pre>dotnet --version   # 8.x.x 以上が表示されればOK</pre>
+      <p>インストールされていない場合は <code>dotnet.microsoft.com/download</code> から .NET SDK をダウンロードしてインストールしてください。</p>
+      <div class="note">💡 .NET SDK 自体は .NET 8 でも、プロジェクトのターゲットフレームワークは net48（.NET Framework 4.8）を指定します。SDK は複数バージョン向けのビルドができます。</div>
+    </div>
+
+    <div class="step">
+      <h3>📋 プロジェクトの作成</h3>
+      <p>リポジトリのルートで以下を実行します：</p>
+      <pre>mkdir MediaBot
+cd MediaBot
+dotnet new console</pre>
+      <p>生成された <code>MediaBot.csproj</code> と <code>Program.cs</code> が出発点です。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 csproj の設定</h3>
+      <p>生成された <code>MediaBot.csproj</code> を以下の内容に書き換えます：</p>
+      <pre>&lt;Project Sdk="Microsoft.NET.Sdk"&gt;
+  &lt;PropertyGroup&gt;
+    &lt;TargetFramework&gt;net48&lt;/TargetFramework&gt;
+    &lt;OutputType&gt;Exe&lt;/OutputType&gt;
+    &lt;Nullable&gt;enable&lt;/Nullable&gt;
+    &lt;ImplicitUsings&gt;enable&lt;/ImplicitUsings&gt;
+    &lt;LangVersion&gt;latest&lt;/LangVersion&gt;
+    &lt;Platforms&gt;x64&lt;/Platforms&gt;
+    &lt;PlatformTarget&gt;x64&lt;/PlatformTarget&gt;
+    &lt;AllowUnsafeBlocks&gt;true&lt;/AllowUnsafeBlocks&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;</pre>
+      <table>
+        <tr><th>設定</th><th>理由</th></tr>
+        <tr><td><code>net48</code></td><td>Media SDK が .NET Framework 4.8 専用</td></tr>
+        <tr><td><code>PlatformTarget x64</code></td><td>Media SDK のネイティブ DLL が x64 専用。これがないと BadImageFormatException が発生</td></tr>
+        <tr><td><code>AllowUnsafeBlocks</code></td><td>音声バッファのアンマネージドメモリ操作に必要</td></tr>
+        <tr><td><code>LangVersion latest</code></td><td>net48 では C# 7.3 がデフォルト。nullable など最新構文を使うために必要</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="section" id="s3">
+    <h2><span class="num">3</span>NuGet パッケージの追加と役割</h2>
+
+    <div class="step">
+      <h3>📋 パッケージ一覧</h3>
+      <p><code>MediaBot.csproj</code> の <code>&lt;ItemGroup&gt;</code> に以下を追加します：</p>
+      <pre>&lt;ItemGroup&gt;
+  &lt;PackageReference Include="Microsoft.Graph.Communications.Client"      Version="1.2.0.4161" /&gt;
+  &lt;PackageReference Include="Microsoft.Graph.Communications.Calls.Media" Version="1.2.0.4161" /&gt;
+  &lt;PackageReference Include="Microsoft.Graph"                            Version="4.54.0" /&gt;
+  &lt;PackageReference Include="Microsoft.Identity.Client"                  Version="4.61.3" /&gt;
+  &lt;PackageReference Include="Microsoft.CognitiveServices.Speech"         Version="1.37.0" /&gt;
+  &lt;PackageReference Include="Microsoft.Owin.SelfHost"                    Version="4.2.2" /&gt;
+  &lt;PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost"       Version="5.3.0" /&gt;
+  &lt;PackageReference Include="Unity.WebAPI"                               Version="5.4.0" /&gt;
+&lt;/ItemGroup&gt;</pre>
+      <table>
+        <tr><th>パッケージ</th><th>役割</th></tr>
+        <tr><td><code>Communications.Client</code></td><td>Teams とのシグナリング（誰が参加・退出など）</td></tr>
+        <tr><td><code>Communications.Calls.Media</code></td><td>リアルタイム音声の受信（AudioSocket）。net48 専用の Windows DLL</td></tr>
+        <tr><td><code>Microsoft.Graph 4.54.0</code></td><td>Call / Modality / OrganizerMeetingInfo など Graph の型。<strong>5.x 系は不可</strong>（Graph.Core バージョン競合）</td></tr>
+        <tr><td><code>Identity.Client</code></td><td>MSAL — Azure AD からアクセストークンを取得</td></tr>
+        <tr><td><code>CognitiveServices.Speech</code></td><td>Azure Speech SDK（STT / TTS）</td></tr>
+        <tr><td><code>Owin.SelfHost</code></td><td>.NET Framework 用 Web サーバー（ASP.NET Core の代わり）</td></tr>
+        <tr><td><code>WebApi.OwinSelfHost</code></td><td>REST API フレームワーク（ASP.NET Core の前身）</td></tr>
+        <tr><td><code>Unity.WebAPI</code></td><td>DI コンテナ（ASP.NET Core の DI の代わり）</td></tr>
+      </table>
+      <div class="warn">⚠️ <code>Microsoft.Graph</code> は <strong>4.54.0</strong> を指定してください。5.x 系は <code>Graph.Core 3.x</code> に依存しており、Communications SDK（<code>Graph.Core 2.x</code> 必須）と競合してビルドエラーになります。</div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="section" id="s4">
+    <h2><span class="num">4</span>ソースコードの実装（7ファイル）</h2>
+
+    <div class="step">
+      <h3>📁 ファイル構成</h3>
+      <div class="arch-box">MediaBot/
+├── MediaBot.csproj
+├── appsettings.json          # 設定ファイル（キーは Git に上げない）
+├── Program.cs                # エントリポイント・起動モード切替
+├── Startup.cs                # OWIN Web サーバー設定
+├── SimpleDependencyResolver.cs  # 手動 DI（.NET Framework 用）
+├── Models/
+│   └── AppSettings.cs        # 設定クラス + JSON ローダー
+├── Bot/
+│   ├── BotService.cs         # Graph Communications クライアント管理
+│   ├── AuthenticationProvider.cs  # Azure AD トークン取得（MSAL）
+│   └── CallHandler.cs        # 1通話の音声受信・STT 処理
+├── Controllers/
+│   └── PlatformCallController.cs  # Teams Webhook の受け口
+└── Services/
+    ├── TranscriptionService.cs    # STT セッション管理
+    ├── SpeechTest.cs              # マイクテスト用
+    └── ConversationTest.cs        # 双方向会話テスト用</div>
+    </div>
+
+    <div class="step">
+      <h3>📄 各ファイルの役割</h3>
+      <table>
+        <tr><th>ファイル</th><th>役割・ポイント</th></tr>
+        <tr><td><code>BotService.cs</code></td><td>
+          <code>CommunicationsClientBuilder</code> でクライアントを初期化。着信コールを受けて <code>CallHandler</code> を生成。
+          <code>CreateMediaSession()</code> は拡張メソッドで、第3引数 null の型曖昧性を <code>IEnumerable&lt;VideoSocketSettings&gt;? noVideo = null</code> で解消する必要がある。
+        </td></tr>
+        <tr><td><code>AuthenticationProvider.cs</code></td><td>
+          <code>IRequestAuthenticationProvider</code> を実装。MSAL の <code>ConfidentialClientApplicationBuilder</code> でクライアント資格情報フローによりトークン取得。
+          <code>ValidateInboundRequestAsync</code> の戻り値は <code>Task&lt;RequestValidationResult&gt;</code>（<code>Task</code> ではない）。
+        </td></tr>
+        <tr><td><code>CallHandler.cs</code></td><td>
+          <code>AudioSocket.AudioMediaReceived</code> に登録した <code>OnAudioMediaReceived</code> が 20ms ごとに呼ばれる。
+          <code>Marshal.Copy(buffer.Data, data, 0, length)</code> で IntPtr からバイト列に変換（unsafe 不要）。
+          バッファは必ず <code>args.Buffer.Dispose()</code> する（アンマネージドメモリのため GC が回収しない）。
+        </td></tr>
+        <tr><td><code>TranscriptionService.cs</code></td><td>
+          <code>PushAudioInputStream</code> を使って PCM データを受け取る Speech セッションを作成。
+          音声フォーマット: 16kHz / 16bit / モノラル（Teams の出力形式に合わせる）。
+        </td></tr>
+        <tr><td><code>ConversationTest.cs</code></td><td>
+          Teams なしで STT → GPT-4o → TTS のフルループをローカルテストするクラス。
+          Azure OpenAI は追加 SDK なし、HttpClient の REST 呼び出しで実装。
+        </td></tr>
+      </table>
+    </div>
+
+    <div class="step">
+      <h3>📄 appsettings.json の構造</h3>
+      <pre>{
+  "AppSettings": {
+    "AzureAdTenantId":        "（Azure AD テナント ID）",
+    "AzureAdAppId":           "（アプリ登録のアプリケーション ID）",
+    "AzureAdAppSecret":       "（クライアントシークレット）",
+    "BotBaseUrl":             "（Azure VM の HTTPS URL または Dev Tunnel URL）",
+    "SpeechKey":              "（Azure Speech Services のキー）",
+    "SpeechRegion":           "japaneast",
+    "AzureOpenAiKey":         "（Azure OpenAI / Foundry のキー）",
+    "AzureOpenAiEndpoint":    "https://（リソース名）.openai.azure.com/",
+    "AzureOpenAiDeployment":  "gpt-4o"
+  }
+}</pre>
+      <div class="warn">⚠️ <code>appsettings.json</code> はキーを含むため、<code>.gitignore</code> で除外してください。</div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="section" id="s5">
+    <h2><span class="num">5</span>Azure Speech Services リソースの作成</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>Teams の音声（PCM 16kHz）をリアルタイムでテキストに変換するために Azure Speech Services を使います。STT（Speech to Text）と TTS（Text to Speech）の両方を提供します。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 リソース作成手順</h3>
+      <ol>
+        <li>Azure Portal の検索バーで「<strong>Speech</strong>」と入力してクリック</li>
+        <li>「<strong>+ 作成</strong>」をクリック</li>
+        <li>以下を設定：</li>
+      </ol>
+      <pre>リソースグループ:  既存のもの（例: Hackathon2026）
+リージョン:        Japan East
+名前:              任意（例: Media-Bot-test）
+価格レベル:        F0（無料 — 5時間/月まで）</pre>
+      <ol start="4">
+        <li>「確認と作成」→「作成」をクリック</li>
+        <li>デプロイ完了後、リソースを開く</li>
+        <li>左メニュー「<strong>リソース管理</strong>」→「<strong>キーとエンドポイント</strong>」</li>
+        <li>「<strong>キーの表示</strong>」→ <strong>キー 1</strong> をコピー</li>
+      </ol>
+      <div class="note">💡 リージョン名（例: japaneast）も控えておきます。appsettings.json の <code>SpeechRegion</code> に使います。</div>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="section" id="s6">
+    <h2><span class="num">6</span>appsettings.json の設定</h2>
+
+    <div class="step">
+      <h3>📋 Speech Services キーの設定</h3>
+      <p><code>MediaBot/appsettings.json</code> を開き、STEP 5 で取得したキーを設定します：</p>
+      <pre>"SpeechKey":    "（Speech Services のキー 1）",
+"SpeechRegion": "japaneast",</pre>
+    </div>
+
+    <div class="step">
+      <h3>📋 Azure OpenAI キーの設定</h3>
+      <p>Azure Portal の Foundry リソース（<code>Hackathon202604</code> 等）→「キーとエンドポイント」→「<strong>OpenAI タブ</strong>」で取得します：</p>
+      <pre>"AzureOpenAiKey":        "（Foundry の OpenAI キー）",
+"AzureOpenAiEndpoint":   "https://（リソース名）.openai.azure.com/",
+"AzureOpenAiDeployment": "gpt-4o",</pre>
+      <div class="note">💡 Foundry リソースの「キーとエンドポイント」ページには「Foundry」「OpenAI」「AI サービス」の3タブがあります。<strong>OpenAI タブ</strong> のキーとエンドポイントを使ってください。</div>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="section" id="s7">
+    <h2><span class="num">7</span>ビルドとよくあるエラーの修正</h2>
+
+    <div class="step">
+      <h3>📋 ビルドコマンド</h3>
+      <pre>cd MediaBot
+dotnet build</pre>
+    </div>
+
+    <div class="step">
+      <h3>⚠️ エラー: BadImageFormatException（x86/x64 不一致）</h3>
+      <p>Media SDK のネイティブ DLL が x64 専用のため、プロセスが x86 で起動すると発生します。</p>
+      <p><strong>対処:</strong> <code>MediaBot.csproj</code> の <code>&lt;PropertyGroup&gt;</code> に以下を追加：</p>
+      <pre>&lt;PlatformTarget&gt;x64&lt;/PlatformTarget&gt;</pre>
+    </div>
+
+    <div class="step">
+      <h3>⚠️ エラー: Microsoft.Graph バージョン競合</h3>
+      <p><code>Microsoft.Graph 5.x</code> は <code>Graph.Core 3.x</code> に依存しますが、Communications SDK は <code>Graph.Core 2.x</code> を要求するため競合します。</p>
+      <p><strong>対処:</strong> <code>Microsoft.Graph</code> のバージョンを <strong>4.54.0</strong> に固定します。</p>
+    </div>
+
+    <div class="step">
+      <h3>⚠️ エラー: IRequestAuthenticationProvider の実装ミス</h3>
+      <p><code>ValidateInboundRequestAsync</code> の戻り値型は <code>Task</code> ではなく <code>Task&lt;RequestValidationResult&gt;</code> です。</p>
+      <pre>// 正しい実装
+public Task&lt;RequestValidationResult&gt; ValidateInboundRequestAsync(HttpRequestMessage request)
+{
+    return Task.FromResult(new RequestValidationResult { IsValid = true });
+}</pre>
+    </div>
+
+    <div class="step">
+      <h3>⚠️ エラー: CreateMediaSession の呼び出し曖昧性</h3>
+      <p>第3引数に <code>null</code> を渡すと、<code>IEnumerable&lt;VideoSocketSettings&gt;</code> と <code>VideoSocketSettings</code> のオーバーロードが曖昧になります。</p>
+      <pre>// 型付き変数で明示的に指定する
+IEnumerable&lt;VideoSocketSettings&gt;? noVideo = null;
+var mediaSession = _client.CreateMediaSession(
+    audioSettings, noVideo, null, null, Guid.NewGuid());</pre>
+    </div>
+
+    <div class="step">
+      <h3>✅ クリーンビルドの確認</h3>
+      <pre>dotnet build
+# → 0 個の警告、0 エラー が表示されれば完了</pre>
+    </div>
+  </div>
+
+  <!-- STEP 8 -->
+  <div class="section" id="s8">
+    <h2><span class="num">8</span>Speech SDK 単体テスト（マイク → STT）</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>Teams なしで Azure Speech SDK の文字起こしが正しく動作することを確認します。Teams から届く音声は PCM 16kHz のバイト列で、このテストでは同じ形式の音声をマイクから取得して動作を検証します。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 実行手順</h3>
+      <p><strong>PowerShell（管理者不要）</strong> で実行します（<code>dotnet run</code> ではなく exe を直接実行する点に注意）：</p>
+      <pre>cd MediaBot
+dotnet build
+.\bin\Debug\net48\MediaBot.exe --speech-test</pre>
+      <div class="warn">⚠️ <code>dotnet run</code> ではなく <code>.\bin\Debug\net48\MediaBot.exe</code> を使ってください。<code>dotnet run</code> は appsettings.json の読み込みパスが変わります。また、PowerShell から実行することで Enter キー問題も発生しません。</div>
+    </div>
+
+    <div class="step">
+      <h3>✅ 期待される出力</h3>
+      <pre>━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎤 モード A: マイクテスト
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+マイクに向かって日本語で話してください。
+Enter を押すと停止します。
+
+[認識中] こんにちは
+[確定 ✅] こんにちは、今日はいい天気ですね。</pre>
+      <p>「認識中」→「確定 ✅」の流れで文字起こしが表示されれば成功です。</p>
+      <div class="note">💡 Bluetooth イヤホン（AirPods 等）をマイクとして使う場合は、Windows の「サウンドの設定」→「録音デバイス」でデフォルトに設定してください。</div>
+    </div>
+
+    <div class="step">
+      <h3>🔗 このテストと本番コードの対応</h3>
+      <div class="arch-box">このテスト（マイク → Speech SDK）
+  AudioConfig.FromDefaultMicrophoneInput()
+                ↓ 唯一の違い
+本番（Teams → PushAudioInputStream）
+  CallHandler.OnAudioMediaReceived()
+    → Marshal.Copy(buffer.Data, data, ...)
+    → PushAudioInputStream.Write(data)   ← ここだけ異なる
+
+Speech SDK の認識ロジックは完全に同一</div>
+    </div>
+  </div>
+
+  <!-- STEP 9 -->
+  <div class="section" id="s9">
+    <h2><span class="num">9</span>双方向会話テスト（STT → GPT-4o → TTS）</h2>
+
+    <div class="step">
+      <h3>🎯 この手順の目的</h3>
+      <p>Teams ボットのコア処理（音声認識 → AI 応答生成 → 音声合成）をローカル環境で完全に動作確認します。これが動けば、Teams 接続部分（インフラ）を整えるだけで本番ボットになります。</p>
+    </div>
+
+    <div class="step">
+      <h3>📋 前提条件</h3>
+      <ul>
+        <li><code>appsettings.json</code> の <code>SpeechKey</code> と <code>AzureOpenAiKey</code> が設定済みであること</li>
+        <li>GPT-4o モデルが Azure AI Foundry にデプロイ済みであること</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h3>📋 実行手順</h3>
+      <pre>.\bin\Debug\net48\MediaBot.exe --chat-test</pre>
+    </div>
+
+    <div class="step">
+      <h3>✅ 期待される動作</h3>
+      <ol>
+        <li>「<strong>[あなた] 話してください...</strong>」と表示される</li>
+        <li>マイクに向かって話す（1文で止まると自動で次のステップへ）</li>
+        <li>「<strong>[あなた] （認識されたテキスト）</strong>」が表示される</li>
+        <li>「<strong>[ボット] 考え中...</strong>」→ GPT-4o の応答テキストが表示される</li>
+        <li>イヤホン / スピーカーから AI の声（日本語女性音声 <code>ja-JP-NanamiNeural</code>）が流れてくる</li>
+        <li>「話してください...」に戻り、ループが続く</li>
+      </ol>
+      <div class="success">✅ 音声で話しかけると AI が音声で返してくれる状態が、Teams ボットの会話コアです。</div>
+    </div>
+
+    <div class="step">
+      <h3>🔗 本番との違い</h3>
+      <table>
+        <tr><th>処理</th><th>このテスト</th><th>Teams 本番</th></tr>
+        <tr><td>音声入力</td><td><code>FromDefaultMicrophoneInput()</code>（マイク）</td><td><code>PushAudioInputStream</code>（Teams 音声）</td></tr>
+        <tr><td>AI 応答</td><td><code>CallGptAsync()</code> ← 同じコード</td><td><code>CallGptAsync()</code> ← 同じコード</td></tr>
+        <tr><td>音声出力</td><td><code>FromDefaultSpeakerOutput()</code>（スピーカー）</td><td>AudioSocket への PCM 送信（要実装）</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- STEP 10 -->
+  <div class="section" id="s10">
+    <h2><span class="num">10</span>本番環境（Azure Windows VM）へのデプロイ概要</h2>
+
+    <div class="step">
+      <h3>🎯 Teams 接続に必要な追加作業</h3>
+      <p>STEP 9 までで会話コアが動作確認できました。本物の Teams 会議に参加させるには以下が必要です：</p>
+      <table>
+        <tr><th>作業</th><th>場所</th><th>難易度</th></tr>
+        <tr><td>Azure AD アプリ登録（<code>Calls.AccessMedia.All</code> 等の権限）</td><td>Azure Portal</td><td>★★☆</td></tr>
+        <tr><td>Azure Windows VM の作成（B2s 以上、パブリック IP 付き）</td><td>Azure Portal</td><td>★★☆</td></tr>
+        <tr><td>UDP ポート 13016 の開放（NSG 設定）</td><td>Azure Portal</td><td>★☆☆</td></tr>
+        <tr><td><code>appsettings.json</code> の <code>BotBaseUrl</code> を VM の FQDN に設定</td><td>コード</td><td>★☆☆</td></tr>
+        <tr><td>TTS → AudioSocket 送信（ボットが Teams に向けて話す）</td><td>コード</td><td>★★★</td></tr>
+      </table>
+    </div>
+
+    <div class="step">
+      <h3>🌐 ローカルでテストできない理由（UDP の壁）</h3>
+      <div class="arch-box">Teams
+  │
+  ├─ ① シグナリング（HTTPS）→ Dev Tunnel / ngrok で届く ✅
+  │
+  └─ ② メディア（SRTP / UDP）→ ルーター NAT 越えが必要 ❌
+       Teams が直接 UDP でパケットを送ってくる
+       Dev Tunnel は HTTP のみ対応のため転送できない</div>
+      <div class="note">💡 テキストチャットボット（HTTP のみ）は Dev Tunnel で動きますが、音声ボット（UDP が必要）は公開 IP を持つサーバーが必須です。これが会社の実装が Azure Windows VM を使う理由です。</div>
+    </div>
+
+    <div class="step">
+      <h3>📋 コード再利用率</h3>
+      <div class="arch-box">CallHandler.cs          ████████████ 100% そのまま使える
+TranscriptionService.cs ████████████ 100% そのまま使える
+ConversationTest の CallGptAsync ████████████ 100% 流用可能
+BotService.cs           ████████████ 100% そのまま使える
+AuthenticationProvider.cs ██████████ 100% そのまま使える
+
+追加で書くもの: TTS → AudioSocket 送信（数十行程度）</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>Application Hosted Media Bot 実装ガイド — Microsoft Agent Hackathon 2026</p>
+</footer>
+
+</body>
+</html>
